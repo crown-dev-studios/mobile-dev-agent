@@ -20,7 +20,7 @@ export type IOSDevice = {
 };
 
 export async function simctlListDevicesJSON(): Promise<SimctlDevicesJSON> {
-  const res = await execFile("xcrun", ["simctl", "list", "devices", "--json"]);
+  const res = await execFile("xcrun", ["simctl", "list", "devices", "--json"], { timeoutMs: 30000 });
   if (!res.ok) {
     throw new Error(`simctl list devices failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
   }
@@ -165,6 +165,41 @@ export async function simctlScreenshot(udid: string, outPath: string): Promise<v
   const res = await execFile("xcrun", ["simctl", "io", udid, "screenshot", outPath]);
   if (!res.ok) {
     throw new Error(`simctl screenshot failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
+  }
+}
+
+export async function simctlShutdown(udid: string): Promise<void> {
+  const res = await execFile("xcrun", ["simctl", "shutdown", udid]);
+  if (!res.ok) {
+    throw new Error(`simctl shutdown failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
+  }
+}
+
+export async function simctlErase(udid: string): Promise<void> {
+  const res = await execFile("xcrun", ["simctl", "erase", udid]);
+  if (!res.ok) {
+    throw new Error(`simctl erase failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
+  }
+}
+
+export async function simctlUninstallApp(udid: string, appId: string): Promise<void> {
+  const res = await execFile("xcrun", ["simctl", "uninstall", udid, appId]);
+  if (!res.ok) {
+    throw new Error(`simctl uninstall failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
+  }
+}
+
+export async function simctlLaunchApp(udid: string, appId: string): Promise<void> {
+  const res = await execFile("xcrun", ["simctl", "launch", udid, appId]);
+  if (!res.ok) {
+    throw new Error(`simctl launch failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
+  }
+}
+
+export async function simctlTerminateApp(udid: string, appId: string): Promise<void> {
+  const res = await execFile("xcrun", ["simctl", "terminate", udid, appId]);
+  if (!res.ok) {
+    throw new Error(`simctl terminate failed (code=${res.code}): ${res.stderr || res.stdout}`.trim());
   }
 }
 
