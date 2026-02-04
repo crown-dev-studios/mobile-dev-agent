@@ -11,28 +11,28 @@ Common commands
   - node dist/src/bin/mobile-dev-agent.js doctor --json
 
 - list devices
-  - node dist/src/bin/mobile-dev-agent.js devices list --platform ios
-  - node dist/src/bin/mobile-dev-agent.js devices list --platform android
+  - node dist/src/bin/mobile-dev-agent.js device list --platform ios
+  - node dist/src/bin/mobile-dev-agent.js device list --platform android
 
 - boot device
-  - node dist/src/bin/mobile-dev-agent.js device boot --name "iPhone 17 Pro"
+  - node dist/src/bin/mobile-dev-agent.js device boot --platform ios --device "iphone-latest"
 
 - build iOS app (simulator)
-  - node dist/src/bin/mobile-dev-agent.js build-ios --project path/to/App.xcodeproj --scheme App
+  - node dist/src/bin/mobile-dev-agent.js app build-ios --project path/to/App.xcodeproj --scheme App
 
 - install app
-  - node dist/src/bin/mobile-dev-agent.js app install --app /path/to/App.app --name "iPhone 17 Pro" --boot
+  - node dist/src/bin/mobile-dev-agent.js app install --platform ios --app /path/to/App.app --device "iphone-latest" --boot
 
 - run Maestro flows (dir or file)
-  - node dist/src/bin/mobile-dev-agent.js test --flow maestro/flows --name "iPhone 17 Pro" --boot --json
-  - node dist/src/bin/mobile-dev-agent.js test --flow flows/login.yaml --format junit --output /tmp/maestro-report.xml
+  - node dist/src/bin/mobile-dev-agent.js test --platform ios --flow maestro/flows --device "iphone-latest" --boot --json
+  - node dist/src/bin/mobile-dev-agent.js test --platform ios --flow flows/login.yaml --format junit --output /tmp/maestro-report.xml
 
 - run ad-hoc flow from stdin
-  - node dist/src/bin/mobile-dev-agent.js flow run --platform ios --name "iPhone 17 Pro" --app-id com.example.app <<'YAML'
+  - node dist/src/bin/mobile-dev-agent.js flow run --platform ios --device "iphone-latest" --app-id com.example.app <<'YAML'
     - launchApp
     - tapOn: "Sign in"
     - assertVisible: "Welcome"
     YAML
 
 - screenshot
-  - node dist/src/bin/mobile-dev-agent.js device screenshot --name "iPhone 17 Pro" --output /tmp/sim.png
+  - node dist/src/bin/mobile-dev-agent.js device screenshot --platform ios --device booted --out /tmp/sim.png

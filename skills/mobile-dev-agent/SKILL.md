@@ -26,15 +26,15 @@ Use the local `mobile-dev-agent` CLI from this repo to drive Maestro flows again
    - Flow(s): path to Maestro YAML or the concrete steps to encode
    - Output: report format and path if needed
 2. Validate environment: `doctor`
-3. Discover devices: `devices list --platform <ios|android|all>`
-4. Boot device (if required): `device boot --name "<Device Name>"`
+3. Discover devices: `device list --platform <ios|android|all>`
+4. Boot device (if required): `device boot --platform <ios|android> --device "<selector>"`
 5. Build/install app (as needed):
-   - iOS build: `build-ios --project <path> --scheme <Scheme>`
-   - Install: `app install --app <path> --name "<Device Name>" --boot`
+   - iOS build: `app build-ios --project <path> --scheme <Scheme>`
+   - Install: `app install --platform <ios|android> --app <path> --device "<selector>" --boot`
 6. Run flows:
-   - File-based: `test --flow <path|dir> --name "<Device Name>" --boot`
+   - File-based: `test --platform <ios|android> --flow <path|dir> --device "<selector>" --boot`
    - Ad-hoc: `flow run ...` with YAML on stdin
-7. Capture artifacts (optional): `device screenshot --name "<Device Name>" --output <path>`
+7. Capture artifacts (optional): `device screenshot --platform <ios|android> --device "<selector>" --out <path>`
 
 ## Prompting Guidance
 

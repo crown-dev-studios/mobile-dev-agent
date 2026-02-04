@@ -41,11 +41,6 @@ Commands:
   repl                   Interactive mode (starts Live mode)
   live                   Manage Live mode (optional)
 
-Aliases (deprecated):
-  devices list            Alias for: device list
-  build-ios               Alias for: app build-ios
-  studio                  Passthrough for: maestro studio
-
 Global options:
   --session <name>        Session name (default: "default")
   --json                  Print a single JSON result to stdout
