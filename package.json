@@ -1,6 +1,6 @@
 {
   "name": "mobile-dev-agent",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A small Node-based CLI wrapper to make Maestro + iOS/Android automation easier to drive from agent workflows",
   "author": "Justin Williams",
   "license": "MIT",
