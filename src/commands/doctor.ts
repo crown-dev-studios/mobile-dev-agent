@@ -1,33 +1,39 @@
-import { parseArgs } from "node:util";
-import { execFile } from "../lib/exec.js";
-import { printHuman, printJSON } from "../lib/format.js";
+import { createEnvelope, type ResultEnvelope } from "../lib/envelope.js";
+import { createRunDir, RunContext } from "../lib/run.js";
+import type { CommandIO } from "../lib/io.js";
 
-type DoctorCheck = {
+export type DoctorCheck = {
   name: string;
   ok: boolean;
-  cmd: string;
+  command: string;
   stdout: string;
   stderr: string;
   hint: string | null;
 };
 
-export async function cmdDoctor(argv: string[]): Promise<void> {
-  const { values } = parseArgs({
-    args: argv,
-    options: {
-      json: { type: "boolean", default: false },
-    },
-    allowPositionals: true,
-  }) as { values: { json?: boolean } };
+export async function cmdDoctor({
+  argv,
+  sessionName,
+  io,
+}: {
+  argv: string[];
+  sessionName: string;
+  io: CommandIO;
+}): Promise<{ envelope: ResultEnvelope<{ checks: DoctorCheck[] }>; exitCode: number }> {
+  const startedAt = new Date();
+
+  const runDir = await createRunDir();
+  const run = new RunContext(runDir, { onEvent: (e) => io.event(e) });
+  io.attachRun(run);
 
   const checks: DoctorCheck[] = [];
 
   async function check(name: string, cmd: string, args: string[], hint: string): Promise<void> {
-    const res = await execFile(cmd, args, { timeoutMs: 15000 });
+    const res = await run.execLogged("doctor", name, cmd, args, { timeoutMs: 15000 });
     checks.push({
       name,
       ok: res.ok,
-      cmd: [cmd, ...args].join(" "),
+      command: res.command,
       stdout: (res.stdout || "").trim(),
       stderr: (res.stderr || "").trim(),
       hint: res.ok ? null : hint,
@@ -38,55 +44,56 @@ export async function cmdDoctor(argv: string[]): Promise<void> {
     "maestro",
     "maestro",
     ["--version"],
-    "Install Maestro: `curl -Ls \"https://get.maestro.mobile.dev\" | bash` then ensure `~/.maestro/bin` is on PATH."
+    'Install Maestro: `curl -Ls "https://get.maestro.mobile.dev" | bash` then ensure `~/.maestro/bin` is on PATH.'
   );
-  await check(
-    "java",
-    "java",
-    ["-version"],
-    "Install Java (recommended: Java 17)."
-  );
-  await check(
-    "xcodebuild",
-    "xcodebuild",
-    ["-version"],
-    "Install Xcode and run `xcode-select --install` for CLI tools."
-  );
+  await check("java", "java", ["-version"], "Install Java (recommended: Java 17).");
+  await check("xcodebuild", "xcodebuild", ["-version"], "Install Xcode and `xcode-select --install`.");
   await check(
     "simctl",
     "xcrun",
     ["simctl", "list", "devices", "--json"],
     "Ensure Xcode Command Line Tools are installed and `xcrun` is available."
   );
+  await check("adb", "adb", ["version"], "Install Android Platform Tools and ensure `adb` is on PATH.");
+  await check("emulator", "emulator", ["-list-avds"], "Install Android Emulator and ensure `emulator` is on PATH.");
   await check(
-    "adb",
-    "adb",
-    ["version"],
-    "Install Android Platform Tools and ensure `adb` is on PATH."
-  );
-  await check(
-    "emulator",
-    "emulator",
-    ["-list-avds"],
-    "Install Android Emulator and ensure the `emulator` binary is on PATH."
+    "axe",
+    "axe",
+    ["--version"],
+    "Install AXe CLI or set MOBILE_DEV_AGENT_AXE_PATH to its absolute path."
   );
 
-  const result = {
-    ok: checks.every((c) => c.ok),
-    checks,
-  };
+  const ok = checks.every((c) => c.ok);
+  const durationMs = Date.now() - startedAt.getTime();
 
-  if (values.json) {
-    printJSON(result);
-    process.exitCode = result.ok ? 0 : 1;
-    return;
+  const envelope = createEnvelope({
+    ok,
+    command_name: "doctor",
+    command_argv: ["doctor", ...argv],
+    session: sessionName,
+    platform: null,
+    started_at: startedAt.toISOString(),
+    duration_ms: durationMs,
+    run_dir: runDir,
+    artifacts: run.artifacts,
+    data: { checks },
+    error: ok
+      ? null
+      : { code: "DEPENDENCY_MISSING", message: "One or more checks failed.", details: checks.filter((c) => !c.ok).map((c) => `${c.name}: ${c.hint ?? "failed"}`) },
+    next_steps: ok ? [] : [{ label: "Re-run doctor", argv: ["doctor"] }],
+  });
+
+  await run.writeResultJson(envelope);
+  envelope.artifacts = run.artifacts;
+
+  if (io.config.mode === "human" && !io.config.quiet) {
+    const lines: string[] = [];
+    lines.push(ok ? "OK: prerequisites look good." : "Missing prerequisites detected.");
+    for (const c of checks) {
+      lines.push(`- ${c.ok ? "OK" : "FAIL"} ${c.name}${c.ok ? "" : c.hint ? ` (${c.hint})` : ""}`);
+    }
+    io.human(lines);
   }
 
-  const lines = [];
-  lines.push(result.ok ? "OK: prerequisites look good." : "Missing prerequisites detected.");
-  for (const c of checks) {
-    lines.push(`- ${c.ok ? "OK" : "FAIL"} ${c.name}${c.ok ? "" : ` (${c.hint})`}`);
-  }
-  printHuman(lines);
-  process.exitCode = result.ok ? 0 : 1;
+  return { envelope, exitCode: ok ? 0 : 1 };
 }
