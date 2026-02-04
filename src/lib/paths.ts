@@ -1,5 +1,6 @@
 import fs from "node:fs/promises";
 import path from "node:path";
+import { getCacheDir } from "./dirs.js";
 
 export function timestampSlug(): string {
   return new Date().toISOString().replace(/[:.]/g, "-");
@@ -10,7 +11,8 @@ export async function ensureDir(dirPath: string): Promise<void> {
 }
 
 export function defaultOutputRoot(kind: string): string {
-  return path.join(process.cwd(), "tmp", kind, timestampSlug());
+  // Prefer cache-managed output over project-directory litter.
+  return path.join(getCacheDir(), "tmp", kind, timestampSlug());
 }
 
 export function safeName(value: unknown): string {
