@@ -25,9 +25,10 @@ import { cmdTest } from "./commands/test.js";
 import { cmdGC } from "./commands/gc.js";
 import { cmdLogsTail } from "./commands/logs.js";
 import { cmdLiveStart, cmdLiveStatus, cmdLiveStop, cmdRepl } from "./commands/live.js";
+import { cmdTartSetup, cmdTartStart, cmdTartRun, cmdTartStop, cmdTartStatus } from "./commands/tart.js";
 
 function isGroupCommand(cmd: string): boolean {
-  return ["session", "device", "app", "ui", "flow", "logs", "live"].includes(cmd);
+  return ["session", "device", "app", "ui", "flow", "logs", "live", "tart"].includes(cmd);
 }
 
 function deriveCommandName(rest: string[]): string {
@@ -276,6 +277,14 @@ export async function main(argv: string[]): Promise<void> {
           start: (a) => cmdLiveStart({ argv: a, sessionName: globals.session, io }),
           status: (a) => cmdLiveStatus({ argv: a, sessionName: globals.session, io }),
           stop: (a) => cmdLiveStop({ argv: a, sessionName: globals.session, io }),
+        }),
+      tart: async (args) =>
+        group("tart", args, {
+          setup: (a) => cmdTartSetup({ argv: a, sessionName: globals.session, io }),
+          start: (a) => cmdTartStart({ argv: a, sessionName: globals.session, io }),
+          run: (a) => cmdTartRun({ argv: a, sessionName: globals.session, io }),
+          stop: (a) => cmdTartStop({ argv: a, sessionName: globals.session, io }),
+          status: (a) => cmdTartStatus({ argv: a, sessionName: globals.session, io }),
         }),
     };
 

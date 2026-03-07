@@ -40,6 +40,7 @@ Commands:
   logs                   View logs (Live mode for --follow)
   repl                   Interactive mode (starts Live mode)
   live                   Manage Live mode (optional)
+  tart                   Run iOS testing in an isolated Tart macOS VM
 
 Global options:
   --session <name>        Session name (default: "default")
@@ -1307,5 +1308,190 @@ Exit codes:
   1 live stop failed
   2 usage error
   127 missing dependency
+```
+
+---
+
+## `mobile-dev-agent tart --help`
+
+```
+tart - Run iOS testing in an isolated Tart macOS virtual machine
+
+Usage:
+  mobile-dev-agent tart <subcommand> [options]
+
+Subcommands:
+  setup                  Create and provision a Tart macOS VM with Xcode + dependencies
+  start                  Boot the VM (headless or with GUI)
+  run                    Run a mobile-dev-agent command inside the VM
+  stop                   Stop the VM (optionally delete it)
+  status                 Show VM status and configuration
+
+VM Options (all subcommands):
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --base-image <image>    Tart base image (default: ghcr.io/cirruslabs/macos-sequoia-xcode:latest)
+  --cpus <n>              CPU count (default: 4)
+  --memory <mb>           Memory in MB (default: 8192)
+  --disk <gb>             Disk in GB (default: 80)
+  --ssh-user <user>       SSH username (default: admin)
+  --ssh-pass <pass>       SSH password (default: admin)
+
+Examples:
+  mobile-dev-agent tart setup
+  mobile-dev-agent tart start --gui
+  mobile-dev-agent tart run doctor
+  mobile-dev-agent tart run "device list --platform ios --json"
+  mobile-dev-agent tart stop
+  mobile-dev-agent tart status --json
+
+Exit codes:
+  0 success
+  1 command failed
+  2 usage error
+  127 missing dependency
+```
+
+## `mobile-dev-agent tart setup --help`
+
+```
+tart setup - Create and provision a Tart macOS VM
+
+Usage:
+  mobile-dev-agent tart setup [options]
+
+This command:
+  1. Clones a macOS + Xcode base image from the Tart registry
+  2. Configures VM resources (CPU, memory, disk)
+  3. Boots the VM and provisions it with Node.js, Java, Maestro, and mobile-dev-agent
+  4. Verifies the installation by running `doctor` inside the VM
+
+Options:
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --base-image <image>    Tart base image (default: ghcr.io/cirruslabs/macos-sequoia-xcode:latest)
+  --cpus <n>              CPU count (default: 4)
+  --memory <mb>           Memory in MB (default: 8192)
+  --disk <gb>             Disk in GB (default: 80)
+  --json                  Print JSON result to stdout
+  --jsonl                 Stream JSON events; final line is the JSON result
+  -h, --help              Show help
+
+Examples:
+  mobile-dev-agent tart setup
+  mobile-dev-agent tart setup --cpus 8 --memory 16384 --json
+  mobile-dev-agent tart setup --base-image ghcr.io/cirruslabs/macos-sequoia-xcode:16.2
+
+Exit codes:
+  0 success
+  1 setup failed
+  2 usage error
+  127 missing dependency (tart not installed)
+```
+
+## `mobile-dev-agent tart start --help`
+
+```
+tart start - Boot the Tart VM
+
+Usage:
+  mobile-dev-agent tart start [options] [<command args>]
+
+Options:
+  --gui                   Open the VM with a macOS GUI window
+  --ssh                   Boot and open an interactive SSH session
+  --sync                  Sync project files into the VM before running
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --json                  Print JSON result to stdout
+  --jsonl                 Stream JSON events; final line is the JSON result
+  -h, --help              Show help
+
+If positional arguments are provided, they are passed as a command to run inside the VM.
+
+Examples:
+  mobile-dev-agent tart start
+  mobile-dev-agent tart start --gui
+  mobile-dev-agent tart start --ssh
+  mobile-dev-agent tart start --sync doctor
+
+Exit codes:
+  0 success
+  1 start failed
+  2 usage error
+```
+
+## `mobile-dev-agent tart run --help`
+
+```
+tart run - Run a mobile-dev-agent command inside the Tart VM
+
+Usage:
+  mobile-dev-agent tart run [options] <command> [<args>]
+
+The VM must be running (use `tart start` first). The command and its arguments
+are forwarded to `mobile-dev-agent` inside the VM via SSH.
+
+Options:
+  --sync                  Sync project files before running
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --json                  Print JSON result to stdout
+  --jsonl                 Stream JSON events; final line is the JSON result
+  -h, --help              Show help
+
+Examples:
+  mobile-dev-agent tart run doctor
+  mobile-dev-agent tart run device list --platform ios
+  mobile-dev-agent tart run --sync test --flow flows/ --boot
+  mobile-dev-agent tart run ui snapshot --json
+
+Exit codes:
+  0 success
+  1 command failed inside VM
+  2 usage error
+```
+
+## `mobile-dev-agent tart stop --help`
+
+```
+tart stop - Stop the Tart VM
+
+Usage:
+  mobile-dev-agent tart stop [options]
+
+Options:
+  --delete                Stop and delete the VM entirely
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --json                  Print JSON result to stdout
+  --jsonl                 Stream JSON events; final line is the JSON result
+  -h, --help              Show help
+
+Examples:
+  mobile-dev-agent tart stop
+  mobile-dev-agent tart stop --delete
+
+Exit codes:
+  0 success
+  1 stop failed
+  2 usage error
+```
+
+## `mobile-dev-agent tart status --help`
+
+```
+tart status - Show Tart VM status and configuration
+
+Usage:
+  mobile-dev-agent tart status [options]
+
+Options:
+  --vm-name <name>        VM name (default: "mobile-dev-agent")
+  --json                  Print JSON result to stdout
+  --jsonl                 Stream JSON events; final line is the JSON result
+  -h, --help              Show help
+
+Examples:
+  mobile-dev-agent tart status
+  mobile-dev-agent tart status --json
+
+Exit codes:
+  0 success
 ```
 

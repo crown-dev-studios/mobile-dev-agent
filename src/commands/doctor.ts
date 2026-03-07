@@ -62,6 +62,12 @@ export async function cmdDoctor({
     ["--version"],
     "Install AXe CLI or set MOBILE_DEV_AGENT_AXE_PATH to its absolute path."
   );
+  await check(
+    "tart",
+    "tart",
+    ["--version"],
+    "Install Tart for containerized iOS testing: brew install cirruslabs/cli/tart (optional)."
+  );
 
   const ok = checks.every((c) => c.ok);
   const durationMs = Date.now() - startedAt.getTime();
